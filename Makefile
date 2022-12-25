@@ -1,10 +1,7 @@
-all: Lox.class
+buildall: src/Lox.java src/Scanner.java src/Token.java src/TokenType.java
+	javac -d bin -cp bin src/Lox.java src/Scanner.java src/Token.java src/TokenType.java
 
-bin/Lox.class: src/Lox.java
-	javac -d bin -cp bin src/Lox.java
-
-
-run: bin/Lox.class
+run: buildall
 	java -classpath bin Lox $(file)
 
 clean:
