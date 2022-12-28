@@ -44,17 +44,41 @@ public class Lox {
         }
     }
 
+    private static boolean isExpression(List<Token> tokens) {
+        if (tokens.size() < 2) {
+            return false;
+        }
+
+        // Last meaningful token. Technically last is always Eof.
+        Token lastToken = tokens.get(tokens.size()-2);
+        if (lastToken.type != TokenType.Semicolon && lastToken.type != TokenType.RightBrace) {
+            return true;
+        }
+
+        return false;
+    }
+
+
     private static void run(String source) {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
+        Parser parser = new Parser(tokens);   
 
-        Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        if (isExpression(tokens)) {
+            Expr expr = parser.parseExpression();
 
-        // Stop if there was a syntax error.
-        if (hadError) return;
+            // Stop if there was a syntax error.
+            if (hadError) return;
 
-        interpreter.interpret(expression);
+            interpreter.interpret(expr);
+        } else {
+            List<Stmt> statements = parser.parse();
+
+            // Stop if there was a syntax error.
+            if (hadError) return;
+    
+            interpreter.interpret(statements);    
+        }
     }
 
     static void error(int line, String message) {

@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.ArrayList;
 
 class Parser {
     private static class ParseError extends RuntimeException {}
@@ -9,13 +10,90 @@ class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(declaration());
+        }
+    
+        return statements; 
+    }
+
+    Expr parseExpression() {
         try {
             return expression();
         } catch (ParseError error) {
             return null;
         }
     }
+
+    private Stmt declaration() {
+        try {
+            if (match(TokenType.Var)) return varDeclaration();
+    
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    private Stmt varDeclaration() {
+        Token name = consume(TokenType.Identifier, "Expect variable name.");
+    
+        Expr initializer = null;
+        if (match(TokenType.Equal)) {
+            initializer = expression();
+        }
+    
+        consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt statement() {
+        if (match(TokenType.If)) return ifStatement();
+        if (match(TokenType.Print)) return printStatement();
+        if (match(TokenType.LeftBrace)) return new Stmt.Block(block()); 
+
+        return expressionStatement();
+    }
+
+    private Stmt ifStatement() {
+        consume(TokenType.LeftParen, "Expect '(' after 'if'.");
+        Expr condition = expression();
+        consume(TokenType.RightParen, "Expect ')' after if condition."); 
+    
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(TokenType.Else)) {
+          elseBranch = statement();
+        }
+    
+        return new Stmt.If(condition, thenBranch, elseBranch);
+      }
+    
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+
+        while (!check(TokenType.RightBrace) && !isAtEnd()) {
+            statements.add(declaration());
+          }
+
+        consume(TokenType.RightBrace, "Expect '}' after block.");
+        return statements;
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(TokenType.Semicolon, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(TokenType.Semicolon, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+      }
 
     private boolean match(TokenType... types) {
         for (TokenType type : types) {
@@ -51,8 +129,26 @@ class Parser {
     }
 
     private Expr expression() {
-        return equality();
+        return assignment();
     }
+
+    private Expr assignment() {
+        Expr expr = equality();
+    
+        if (match(TokenType.Equal)) {
+            Token equals = previous();
+            Expr value = assignment();
+    
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+    
+            error(equals, "Invalid assignment target."); 
+        }
+    
+        return expr;
+      }
 
     private Expr equality() {
         Expr expr = comparison();
@@ -120,6 +216,10 @@ class Parser {
         if (match(TokenType.Number, TokenType.String)) {
             return new Expr.Literal(previous().literal);
         }
+
+        if (match(TokenType.Identifier)) {
+            return new Expr.Variable(previous());
+          }
     
         if (match(TokenType.LeftParen)) {
             Expr expr = expression();
