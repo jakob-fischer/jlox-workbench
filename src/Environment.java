@@ -26,15 +26,15 @@ class Environment {
     }
 
     void assign(Token name, Object value) {
-        if (!values.containsKey(name.lexeme)) {
+        if (values.containsKey(name.lexeme)) {
+            values.put(name.lexeme, value);
+        } else {
             if (parent != null) {
                 parent.assign(name, value);
             } else {
                 throw new RuntimeError(name,
                     "Undefined variable '" + name.lexeme + "'.");
             }
-        }
-    
-        values.put(name.lexeme, value);
+        }    
     }
 }

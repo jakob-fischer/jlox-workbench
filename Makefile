@@ -1,5 +1,5 @@
-buildall: src/Lox.java src/Scanner.java src/Token.java src/TokenType.java src/Expr.java src/Stmt.java src/Parser.java src/AstPrinter.java src/Interpreter.java src/RuntimeError.java src/Environment.java
-	javac -d bin -cp bin src/Lox.java src/Scanner.java src/Token.java src/TokenType.java src/Expr.java src/Stmt.java src/Parser.java src/AstPrinter.java src/Interpreter.java src/RuntimeError.java src/Environment.java
+buildall: src/Lox.java src/Scanner.java src/Token.java src/TokenType.java src/Expr.java src/Stmt.java src/Parser.java src/AstPrinter.java src/Interpreter.java src/RuntimeError.java src/Environment.java src/LoxCallable.java src/LoxFunction.java src/Return.java
+	javac -d bin -cp bin src/Lox.java src/Scanner.java src/Token.java src/TokenType.java src/Expr.java src/Stmt.java src/Parser.java src/AstPrinter.java src/Interpreter.java src/RuntimeError.java src/Environment.java src/LoxCallable.java src/LoxFunction.java src/Return.java
 
 src/Expr.java: src/generator/GenerateAst.java
 	javac -d build -cp build src/generator/GenerateAst.java
