@@ -73,6 +73,8 @@ public class Lox {
             Resolver resolver = new Resolver(interpreter);
             resolver.resolve(expr);
 
+            if (hadError) return;
+
             interpreter.interpret(expr);
         } else {
             List<Stmt> statements = parser.parse();
@@ -82,7 +84,9 @@ public class Lox {
 
             Resolver resolver = new Resolver(interpreter);
             resolver.resolve(statements);
-    
+
+            if (hadError) return;
+
             interpreter.interpret(statements);    
         }
     }
